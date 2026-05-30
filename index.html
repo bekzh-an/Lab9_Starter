@@ -7,8 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
 
-  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script> 
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
   <script>window.TrackJS && TrackJS.install({ token: "d4e2e19329644faf85dec3a892fb3621" });</script>
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.log(`Global error caught: "${message}" at line ${lineno}`);
+    };
+  </script>
 
   <style>
     button {
@@ -99,14 +104,6 @@
         this.name = 'ValidationError';
       }
     }
-
-    // ── Step 5: Global error handler (window.onerror) ───────────────────────
-
-    window.onerror = function(message, source, lineno, colno, error) {
-      console.log(`Global error caught: "${message}" at line ${lineno}`);
-      // TrackJS captures this automatically once the snippet is in the <head>
-      return true;
-    };
 
     // ── Step 3: Calculator with try/catch/finally ───────────────────────────
 
