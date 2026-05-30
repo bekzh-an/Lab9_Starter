@@ -11,43 +11,11 @@ class ValidationError extends Error {
 
 window.onerror = function(message, source, lineno, colno, error) {
   console.log(`Global error caught: "${message}" at line ${lineno}`);
-  // In a real app you would send this to a server or TrackJS picks it up here:
-  // fetch('/log', { method: 'POST', body: JSON.stringify({ message, source, lineno }) });
+  // In a real app you would POST this to a server; TrackJS captures it automatically
   return true;
 };
 
-// ── Username (Step 4: throw + custom error + show on page) ────────────────────
-
-document.getElementById('username-btn').addEventListener('click', () => {
-  const input = document.getElementById('username-input').value.trim();
-  const display = document.getElementById('username-display');
-
-  try {
-    if (input === '') {
-      throw new ValidationError('Username cannot be empty.');
-    }
-    if (input.length < 3) {
-      throw new ValidationError('Username must be at least 3 characters.');
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(input)) {
-      throw new ValidationError('Username can only contain letters, numbers, and underscores.');
-    }
-    display.textContent = `Welcome, ${input}!`;
-  } catch (err) {
-    if (err instanceof ValidationError) {
-      display.textContent = `ValidationError: ${err.message}`;
-    } else {
-      display.textContent = `Error: ${err.message}`;
-    }
-    console.error(err);
-  } finally {
-    console.log('Username validation complete (finally)');
-  }
-});
-
 // ── Step 3: Calculator with try/catch/finally ─────────────────────────────────
-// Realistic errors: empty inputs, non-numeric values, divide by zero
-// The divide-by-zero case is realistic — easy to trigger by accident
 
 let form = document.querySelector('form');
 form.addEventListener('submit', e => {
@@ -109,8 +77,8 @@ btnWarn.addEventListener('click', () => {
 });
 
 btnAssert.addEventListener('click', () => {
-  console.assert(1 === 2, 'Assertion failed: 1 !== 2');     // prints
-  console.assert(1 === 1, 'This will NOT print');            // silent
+  console.assert(1 === 2, 'Assertion failed: 1 !== 2');
+  console.assert(1 === 1, 'This will NOT print');
 });
 
 btnClear.addEventListener('click', () => {
@@ -154,9 +122,9 @@ btnTrace.addEventListener('click', () => {
   outer();
 });
 
-// Step 5: triggers window.onerror — called outside try/catch intentionally
+// Fires outside try/catch so it bubbles up to window.onerror
 btnGlobal.addEventListener('click', () => {
   setTimeout(() => {
-    thisFunctionDoesNotExist(); // ReferenceError — bubbles to window.onerror
+    thisFunctionDoesNotExist(); // ReferenceError
   }, 0);
 });
