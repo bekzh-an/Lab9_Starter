@@ -1,30 +1,53 @@
-// ── Custom Error Classes ──────────────────────────────────────────────────────
+// ── Step 4: Custom Error class extending Error ────────────────────────────────
 
 class ValidationError extends Error {
-  constructor(message, field) {
+  constructor(message) {
     super(message);
     this.name = 'ValidationError';
-    this.field = field;
   }
 }
 
-class DivisionError extends ValidationError {
-  constructor() {
-    super('Cannot divide by zero', 'second-num');
-    this.name = 'DivisionError';
-  }
-}
-
-// ── Global Error Handler ──────────────────────────────────────────────────────
+// ── Step 5: Global error handler (window.onerror) ─────────────────────────────
 
 window.onerror = function(message, source, lineno, colno, error) {
   console.log(`Global error caught: "${message}" at line ${lineno}`);
-  // could POST to a logging endpoint here, e.g.:
+  // In a real app you would send this to a server or TrackJS picks it up here:
   // fetch('/log', { method: 'POST', body: JSON.stringify({ message, source, lineno }) });
   return true;
 };
 
-// ── Calculator ────────────────────────────────────────────────────────────────
+// ── Username (Step 4: throw + custom error + show on page) ────────────────────
+
+document.getElementById('username-btn').addEventListener('click', () => {
+  const input = document.getElementById('username-input').value.trim();
+  const display = document.getElementById('username-display');
+
+  try {
+    if (input === '') {
+      throw new ValidationError('Username cannot be empty.');
+    }
+    if (input.length < 3) {
+      throw new ValidationError('Username must be at least 3 characters.');
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(input)) {
+      throw new ValidationError('Username can only contain letters, numbers, and underscores.');
+    }
+    display.textContent = `Welcome, ${input}!`;
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      display.textContent = `ValidationError: ${err.message}`;
+    } else {
+      display.textContent = `Error: ${err.message}`;
+    }
+    console.error(err);
+  } finally {
+    console.log('Username validation complete (finally)');
+  }
+});
+
+// ── Step 3: Calculator with try/catch/finally ─────────────────────────────────
+// Realistic errors: empty inputs, non-numeric values, divide by zero
+// The divide-by-zero case is realistic — easy to trigger by accident
 
 let form = document.querySelector('form');
 form.addEventListener('submit', e => {
@@ -36,30 +59,24 @@ form.addEventListener('submit', e => {
 
   try {
     if (firstNum === '' || secondNum === '') {
-      throw new ValidationError('Both fields must be filled in', 'inputs');
+      throw new ValidationError('Both fields must be filled in.');
     }
     if (isNaN(firstNum) || isNaN(secondNum)) {
-      throw new ValidationError('Inputs must be numbers', 'inputs');
+      throw new ValidationError('Inputs must be valid numbers.');
     }
     if (operator === '/' && Number(secondNum) === 0) {
-      throw new DivisionError();
+      throw new ValidationError('Cannot divide by zero.');
     }
     output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
   } catch (err) {
-    if (err instanceof DivisionError) {
-      output.innerHTML = `DivisionError: ${err.message}`;
-    } else if (err instanceof ValidationError) {
-      output.innerHTML = `ValidationError [${err.field}]: ${err.message}`;
-    } else {
-      output.innerHTML = `Error: ${err.message}`;
-    }
+    output.innerHTML = `${err.name}: ${err.message}`;
     console.error(err);
   } finally {
     console.log('Calculator evaluation finished (finally)');
   }
 });
 
-// ── Console Buttons ───────────────────────────────────────────────────────────
+// ── Step 2: Console API buttons ───────────────────────────────────────────────
 
 let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
@@ -76,24 +93,24 @@ const people = [
 ];
 
 btnLog.addEventListener('click', () => {
-  console.log('Hello from console.log:', { lab: 9, topic: 'errors' });
+  console.log('console.log demo:', { lab: 9, topic: 'errors' });
 });
 
 btnError.addEventListener('click', () => {
-  console.error('console.error: something went wrong!');
+  console.error('console.error demo: simulated failure');
 });
 
 btnCount.addEventListener('click', () => {
-  console.count('button clicks');
+  console.count('clicked');
 });
 
 btnWarn.addEventListener('click', () => {
-  console.warn('console.warn: this API will be deprecated soon');
+  console.warn('console.warn demo: this API is deprecated');
 });
 
 btnAssert.addEventListener('click', () => {
-  console.assert(1 === 2, 'Assertion failed: 1 does not equal 2');
-  console.assert(1 === 1, 'This will NOT print — assertion passed');
+  console.assert(1 === 2, 'Assertion failed: 1 !== 2');     // prints
+  console.assert(1 === 1, 'This will NOT print');            // silent
 });
 
 btnClear.addEventListener('click', () => {
@@ -109,14 +126,14 @@ btnDirxml.addEventListener('click', () => {
 });
 
 btnGroupStart.addEventListener('click', () => {
-  console.group('My Group');
-  console.log('This log is inside the group');
-  console.warn('This warning is inside the group too');
+  console.group('Error Report');
+  console.log('inside the group');
+  console.warn('warning inside the group');
 });
 
 btnGroupEnd.addEventListener('click', () => {
   console.groupEnd();
-  console.log('Back outside the group');
+  console.log('back outside the group');
 });
 
 btnTable.addEventListener('click', () => {
@@ -132,14 +149,14 @@ btnTimeEnd.addEventListener('click', () => {
 });
 
 btnTrace.addEventListener('click', () => {
-  function inner() { console.trace('Trace from inner()'); }
+  function inner() { console.trace('trace from inner()'); }
   function outer() { inner(); }
   outer();
 });
 
+// Step 5: triggers window.onerror — called outside try/catch intentionally
 btnGlobal.addEventListener('click', () => {
-  // called outside try/catch so window.onerror picks it up
   setTimeout(() => {
-    thisFunctionDoesNotExist(); // ReferenceError
+    thisFunctionDoesNotExist(); // ReferenceError — bubbles to window.onerror
   }, 0);
 });
